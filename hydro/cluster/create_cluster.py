@@ -55,20 +55,20 @@ def create_cluster(mem_count, ebs_count, func_count, gpu_count, sched_count,
     # this because other pods depend on knowing the management pod's IP address.
     management_ip = util.get_pod_ips(client, 'role=management', is_running=True)[0]
 
-    # Create the NVidia kubernetes plugin DaemonSet that enables GPU accesses.
-    nvidia_ds_exists = True
-    try:
-        apps_client.read_namespaced_daemon_set('nvidia-device-plugin-daemonset', namespace='kube-system')
-    except: # Throws an error if the DS doesnt' exist.
-        nvidia_ds_exists = False
+    # # Create the NVidia kubernetes plugin DaemonSet that enables GPU accesses.
+    # nvidia_ds_exists = True
+    # try:
+    #     apps_client.read_namespaced_daemon_set('nvidia-device-plugin-daemonset', namespace='kube-system')
+    # except: # Throws an error if the DS doesnt' exist.
+    #     nvidia_ds_exists = False
 
-    if not nvidia_ds_exists:
-        os.system('wget https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/1.0.0-beta5/nvidia-device-plugin.yml > /dev/null 2>&1')
+    # if not nvidia_ds_exists:
+    #     os.system('wget https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/1.0.0-beta5/nvidia-device-plugin.yml > /dev/null 2>&1')
 
-        ds_spec = util.load_yaml('nvidia-device-plugin.yml')
-        apps_client.create_namespaced_daemon_set(namespace='kube-system', body=ds_spec)
+    #     ds_spec = util.load_yaml('nvidia-device-plugin.yml')
+    #     apps_client.create_namespaced_daemon_set(namespace='kube-system', body=ds_spec)
 
-        os.system('rm nvidia-device-plugin.yml')
+    #     os.system('rm nvidia-device-plugin.yml')
 
     # Copy kube config file to management pod, so it can execute kubectl
     # commands, in addition to SSH keys and KVS config.
@@ -119,24 +119,24 @@ def create_cluster(mem_count, ebs_count, func_count, gpu_count, sched_count,
         client.create_namespaced_service(namespace=util.NAMESPACE,
                                          body=service_spec)
 
-    print('Adding %d scheduler nodes...' % (sched_count))
-    batch_add_nodes(client, apps_client, cfile, ['scheduler'], [sched_count],
-                    BATCH_SIZE, prefix)
-    util.get_pod_ips(client, 'role=scheduler')
+    # print('Adding %d scheduler nodes...' % (sched_count))
+    # batch_add_nodes(client, apps_client, cfile, ['scheduler'], [sched_count],
+    #                 BATCH_SIZE, prefix)
+    # util.get_pod_ips(client, 'role=scheduler')
 
-    print('Adding %d function, %d GPU nodes...' % (func_count, gpu_count))
-    batch_add_nodes(client, apps_client, cfile, ['function', 'gpu'],
-                    [func_count, gpu_count], BATCH_SIZE, prefix)
+    # print('Adding %d function, %d GPU nodes...' % (func_count, gpu_count))
+    # batch_add_nodes(client, apps_client, cfile, ['function', 'gpu'],
+    #                 [func_count, gpu_count], BATCH_SIZE, prefix)
 
-    print('Creating function service...')
-    service_spec = util.load_yaml('yaml/services/function.yml', prefix)
-    if util.get_service_address(client, 'function-service') is None:
-        client.create_namespaced_service(namespace=util.NAMESPACE,
-                                         body=service_spec)
+    # print('Creating function service...')
+    # service_spec = util.load_yaml('yaml/services/function.yml', prefix)
+    # if util.get_service_address(client, 'function-service') is None:
+    #     client.create_namespaced_service(namespace=util.NAMESPACE,
+    #                                      body=service_spec)
 
-    print('Adding %d benchmark nodes...' % (bench_count))
-    batch_add_nodes(client, apps_client, cfile, ['benchmark'], [bench_count],
-                    BATCH_SIZE, prefix)
+    # print('Adding %d benchmark nodes...' % (bench_count))
+    # batch_add_nodes(client, apps_client, cfile, ['benchmark'], [bench_count],
+    #                 BATCH_SIZE, prefix)
 
     print('Finished creating all pods...')
     os.system('touch setup_complete')
@@ -164,11 +164,11 @@ def create_cluster(mem_count, ebs_count, func_count, gpu_count, sched_count,
                                                 IpPermissions=permission)
 
     routing_svc_addr = util.get_service_address(client, 'routing-service')
-    function_svc_addr = util.get_service_address(client, 'function-service')
+    # function_svc_addr = util.get_service_address(client, 'function-service')
     print('The routing service can be accessed here: \n\t%s' %
           (routing_svc_addr))
-    print('The function service can be accessed here: \n\t%s' %
-          (function_svc_addr))
+    # print('The function service can be accessed here: \n\t%s' %
+    #       (function_svc_addr))
 
 
 if __name__ == '__main__':
@@ -191,10 +191,10 @@ if __name__ == '__main__':
                         '(required)', dest='routing', required=True)
     parser.add_argument('-f', '--function', nargs=1, type=int, metavar='F',
                         help='The number of function nodes to start with ' +
-                        '(required)', dest='function', required=True)
+                        '(optional)', dest='function', default=0)
     parser.add_argument('-s', '--scheduler', nargs=1, type=int, metavar='S',
                         help='The number of scheduler nodes to start with ' +
-                        '(required)', dest='scheduler', required=True)
+                        '(optional)', dest='scheduler', default=0)
     parser.add_argument('-g', '--gpu', nargs='?', type=int, metavar='G',
                         help='The number of GPU nodes to start with ' +
                         '(optional)', dest='gpu', default=0)

@@ -53,4 +53,6 @@ rm tmp.yml
 echo "Creating cluster on AWS..."
 kops update cluster --name ${HYDRO_CLUSTER_NAME} --yes > /dev/null 2>&1
 
+kops export kubecfg ${HYDRO_CLUSTER_NAME} --admin
+
 ./validate_cluster.sh
