@@ -20,7 +20,7 @@ def main():
 		message = socket.recv()
 		print('Received message, restarting memory nodes...')
 		restart_all(client)
-		socket.send('Success')
+		socket.send_string('Success')
 
 
 if __name__ == '__main__':
