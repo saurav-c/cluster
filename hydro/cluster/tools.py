@@ -35,6 +35,8 @@ def send_conf_all(client=None):
 
 
 def send_conf(ip, client=None):
+	print(client)
+	print(client is None)
 	client = client if client is not None else main_client
 	os.system('cp %s ./anna-config.yml' % BASE_CONFIG_FILE)
 
@@ -79,6 +81,6 @@ def restart(ip, client=None):
 
 	print('Restarted %s' %(ip))
 
-	
+
 if __name__ == '__main__':
 	main()
