@@ -72,14 +72,13 @@ def restart(ip, client=None):
 	cname = pod.spec.containers[0].name
 	kill_cmd = 'kubectl exec -it %s -c %s -- /sbin/killall5' % (pname, cname)
 	subprocess.run(kill_cmd, shell=True)
+	pod_ips = util.get_pod_ips(client, selector='role=memory', is_running=True)
+	while ip not in pod_ips:
+		pod_ips = util.get_pod_ips(client, selector='role='+kind, is_running=True)
+	send_conf(ip)
+
+	print('Restarted %s' %(ip))
+
 	
-    pod_ips = util.get_pod_ips(client, selector='role=memory', is_running=True)
-    while ip not in pod_ips:
-        pod_ips = util.get_pod_ips(client, selector='role='+kind, is_running=True)
-
-    send_conf(ip)
-    print('Restarted %s' %(ip))
-
-
 if __name__ == '__main__':
 	main()
