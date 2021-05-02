@@ -2,7 +2,7 @@
 
 import zmq
 from hydro.shared import util
-from tools import restart_all
+from hydro.cluster.tools import restart_all
 
 PORT = 5000
 
@@ -14,7 +14,7 @@ def main():
 	client, apps_client = util.init_k8s()
 
 	print('Started Anna tools server...')
-	
+
 	# Wait for restart messages
 	while True:
 		message = socket.recv()
