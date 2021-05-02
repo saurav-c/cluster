@@ -29,14 +29,13 @@ def main():
 			restart(ip)
 
 def send_conf_all(client=None):
+	client = client if client is not None else main_client
 	pod_ips = util.get_pod_ips(client, selector='role=memory', is_running=True)
 	for pod_ip in pod_ips:
 		send_conf(pod_ip)
 
 
 def send_conf(ip, client=None):
-	print(client)
-	print(client is None)
 	client = client if client is not None else main_client
 	os.system('cp %s ./anna-config.yml' % BASE_CONFIG_FILE)
 
@@ -62,6 +61,7 @@ def send_conf(ip, client=None):
 	os.system('rm ./anna-config.yml')
 
 def restart_all(client=None):
+	client = client if client is not None else main_client
 	pod_ips = util.get_pod_ips(client, selector='role=memory', is_running=True)
 	for pod_ip in pod_ips:
 		restart(pod_ip)
