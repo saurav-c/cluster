@@ -40,66 +40,67 @@ def create_cluster(mem_count, ebs_count, func_count, gpu_count, sched_count,
 
     client, apps_client = util.init_k8s()
 
-    print('Creating management pods...')
-    management_spec = util.load_yaml('yaml/pods/management-pod.yml', prefix)
-    env = management_spec['spec']['containers'][0]['env']
+    # print('Creating management pods...')
+    # management_spec = util.load_yaml('yaml/pods/management-pod.yml', prefix)
+    # env = management_spec['spec']['containers'][0]['env']
 
-    util.replace_yaml_val(env, 'AWS_ACCESS_KEY_ID', aws_key_id)
-    util.replace_yaml_val(env, 'AWS_SECRET_ACCESS_KEY', aws_key)
-    util.replace_yaml_val(env, 'KOPS_STATE_STORE', kops_bucket)
-    util.replace_yaml_val(env, 'HYDRO_CLUSTER_NAME', cluster_name)
+    # util.replace_yaml_val(env, 'AWS_ACCESS_KEY_ID', aws_key_id)
+    # util.replace_yaml_val(env, 'AWS_SECRET_ACCESS_KEY', aws_key)
+    # util.replace_yaml_val(env, 'KOPS_STATE_STORE', kops_bucket)
+    # util.replace_yaml_val(env, 'HYDRO_CLUSTER_NAME', cluster_name)
 
-    client.create_namespaced_pod(namespace=util.NAMESPACE, body=management_spec)
+    # client.create_namespaced_pod(namespace=util.NAMESPACE, body=management_spec)
 
     # Waits until the management pod starts to move forward -- we need to do
     # this because other pods depend on knowing the management pod's IP address.
-    management_ip = util.get_pod_ips(client, 'role=management', is_running=True)[0]
+    # management_ip = util.get_pod_ips(client, 'role=management', is_running=True)[0]
+    management_ip = "NULL"
 
     # Create the NVidia kubernetes plugin DaemonSet that enables GPU accesses.
-    nvidia_ds_exists = True
-    try:
-        apps_client.read_namespaced_daemon_set('nvidia-device-plugin-daemonset', namespace='kube-system')
-    except: # Throws an error if the DS doesnt' exist.
-        nvidia_ds_exists = False
+    # nvidia_ds_exists = True
+    # try:
+    #     apps_client.read_namespaced_daemon_set('nvidia-device-plugin-daemonset', namespace='kube-system')
+    # except: # Throws an error if the DS doesnt' exist.
+    #     nvidia_ds_exists = False
 
-    if not nvidia_ds_exists:
-        os.system('wget https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/1.0.0-beta5/nvidia-device-plugin.yml > /dev/null 2>&1')
+    # if not nvidia_ds_exists:
+    #     os.system('wget https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/1.0.0-beta5/nvidia-device-plugin.yml > /dev/null 2>&1')
 
-        ds_spec = util.load_yaml('nvidia-device-plugin.yml')
-        apps_client.create_namespaced_daemon_set(namespace='kube-system', body=ds_spec)
+    #     ds_spec = util.load_yaml('nvidia-device-plugin.yml')
+    #     apps_client.create_namespaced_daemon_set(namespace='kube-system', body=ds_spec)
 
-        os.system('rm nvidia-device-plugin.yml')
+    #     os.system('rm nvidia-device-plugin.yml')
 
-    # Copy kube config file to management pod, so it can execute kubectl
-    # commands, in addition to SSH keys and KVS config.
-    management_podname = management_spec['metadata']['name']
-    kcname = management_spec['spec']['containers'][0]['name']
+    # # Copy kube config file to management pod, so it can execute kubectl
+    # # commands, in addition to SSH keys and KVS config.
+    # management_podname = management_spec['metadata']['name']
+    # kcname = management_spec['spec']['containers'][0]['name']
 
-    os.system('cp %s anna-config.yml' % cfile)
-    kubecfg = os.path.join(os.environ['HOME'], '.kube/config')
-    util.copy_file_to_pod(client, kubecfg, management_podname, '/root/.kube/',
-                          kcname)
-    util.copy_file_to_pod(client, ssh_key, management_podname, '/root/.ssh/',
-                          kcname)
-    util.copy_file_to_pod(client, ssh_key + '.pub', management_podname,
-                          '/root/.ssh/', kcname)
-    util.copy_file_to_pod(client, 'anna-config.yml', management_podname,
-                          '/hydro/anna/conf/', kcname)
+    # os.system('cp %s anna-config.yml' % cfile)
+    # kubecfg = os.path.join(os.environ['HOME'], '.kube/config')
+    # util.copy_file_to_pod(client, kubecfg, management_podname, '/root/.kube/',
+    #                       kcname)
+    # util.copy_file_to_pod(client, ssh_key, management_podname, '/root/.ssh/',
+    #                       kcname)
+    # util.copy_file_to_pod(client, ssh_key + '.pub', management_podname,
+    #                       '/root/.ssh/', kcname)
+    # util.copy_file_to_pod(client, 'anna-config.yml', management_podname,
+    #                       '/hydro/anna/conf/', kcname)
 
     # Start the monitoring pod.
-    mon_spec = util.load_yaml('yaml/pods/monitoring-pod.yml', prefix)
-    util.replace_yaml_val(mon_spec['spec']['containers'][0]['env'], 'MGMT_IP',
-                          management_ip)
-    client.create_namespaced_pod(namespace=util.NAMESPACE, body=mon_spec)
+    # mon_spec = util.load_yaml('yaml/pods/monitoring-pod.yml', prefix)
+    # util.replace_yaml_val(mon_spec['spec']['containers'][0]['env'], 'MGMT_IP',
+    #                       management_ip)
+    # client.create_namespaced_pod(namespace=util.NAMESPACE, body=mon_spec)
 
     # Wait until the monitoring pod is finished creating to get its IP address
     # and then copy KVS config into the monitoring pod.
-    util.get_pod_ips(client, 'role=monitoring')
-    util.copy_file_to_pod(client, 'anna-config.yml',
-                          mon_spec['metadata']['name'],
-                          '/hydro/anna/conf/',
-                          mon_spec['spec']['containers'][0]['name'])
-    os.system('rm anna-config.yml')
+    # util.get_pod_ips(client, 'role=monitoring')
+    # util.copy_file_to_pod(client, 'anna-config.yml',
+    #                       mon_spec['metadata']['name'],
+    #                       '/hydro/anna/conf/',
+    #                       mon_spec['spec']['containers'][0]['name'])
+    # os.system('rm anna-config.yml')
 
     print('Creating %d routing nodes...' % (route_count))
     batch_add_nodes(client, apps_client, cfile, ['routing'], [route_count], BATCH_SIZE, prefix)
@@ -119,30 +120,30 @@ def create_cluster(mem_count, ebs_count, func_count, gpu_count, sched_count,
         client.create_namespaced_service(namespace=util.NAMESPACE,
                                          body=service_spec)
 
-    print('Adding %d scheduler nodes...' % (sched_count))
-    batch_add_nodes(client, apps_client, cfile, ['scheduler'], [sched_count],
-                    BATCH_SIZE, prefix)
-    util.get_pod_ips(client, 'role=scheduler')
+    # print('Adding %d scheduler nodes...' % (sched_count))
+    # batch_add_nodes(client, apps_client, cfile, ['scheduler'], [sched_count],
+    #                 BATCH_SIZE, prefix)
+    # util.get_pod_ips(client, 'role=scheduler')
 
-    print('Adding %d function, %d GPU nodes...' % (func_count, gpu_count))
-    batch_add_nodes(client, apps_client, cfile, ['function', 'gpu'],
-                    [func_count, gpu_count], BATCH_SIZE, prefix)
+    # print('Adding %d function, %d GPU nodes...' % (func_count, gpu_count))
+    # batch_add_nodes(client, apps_client, cfile, ['function', 'gpu'],
+    #                 [func_count, gpu_count], BATCH_SIZE, prefix)
 
-    print('Creating function service...')
-    service_spec = util.load_yaml('yaml/services/function.yml', prefix)
-    if util.get_service_address(client, 'function-service') is None:
-        client.create_namespaced_service(namespace=util.NAMESPACE,
-                                         body=service_spec)
+    # print('Creating function service...')
+    # service_spec = util.load_yaml('yaml/services/function.yml', prefix)
+    # if util.get_service_address(client, 'function-service') is None:
+    #     client.create_namespaced_service(namespace=util.NAMESPACE,
+    #                                      body=service_spec)
 
-    print('Adding %d benchmark nodes...' % (bench_count))
-    batch_add_nodes(client, apps_client, cfile, ['benchmark'], [bench_count],
-                    BATCH_SIZE, prefix)
+    # print('Adding %d benchmark nodes...' % (bench_count))
+    # batch_add_nodes(client, apps_client, cfile, ['benchmark'], [bench_count],
+    #                 BATCH_SIZE, prefix)
 
     print('Finished creating all pods...')
-    os.system('touch setup_complete')
-    util.copy_file_to_pod(client, 'setup_complete', management_podname, '/hydro',
-                          kcname)
-    os.system('rm setup_complete')
+    # os.system('touch setup_complete')
+    # util.copy_file_to_pod(client, 'setup_complete', management_podname, '/hydro',
+    #                       kcname)
+    # os.system('rm setup_complete')
 
     sg_name = 'nodes.' + cluster_name
     sg = ec2_client.describe_security_groups(
@@ -164,11 +165,11 @@ def create_cluster(mem_count, ebs_count, func_count, gpu_count, sched_count,
                                                 IpPermissions=permission)
 
     routing_svc_addr = util.get_service_address(client, 'routing-service')
-    function_svc_addr = util.get_service_address(client, 'function-service')
+    # function_svc_addr = util.get_service_address(client, 'function-service')
     print('The routing service can be accessed here: \n\t%s' %
           (routing_svc_addr))
-    print('The function service can be accessed here: \n\t%s' %
-          (function_svc_addr))
+    # print('The function service can be accessed here: \n\t%s' %
+    #       (function_svc_addr))
 
 
 if __name__ == '__main__':
