@@ -168,7 +168,7 @@ def copy_file_to_pod(client, file_path, pod_name, pod_path, container, retry=5):
         if retry > 0:
             retry -= 1
             sleep_time = (5 - retry) * 10
-            print('Retrying in %d...' % (sleep_time)
+            print('Retrying in %d...' % (sleep_time))
             time.sleep(sleep_time)
             copy_file_to_pod(client, file_path, pod_name, pod_path, container, retry)
 
