@@ -46,6 +46,6 @@ spec:
         - name: MON_IPS
           value: MON_IPS_DUMMY
         - name: REPO_ORG
-          value: hydro-project
+          value: saurav-c
         - name: REPO_BRANCH
-          value: master
+          value: test
