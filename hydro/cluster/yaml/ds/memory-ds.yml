@@ -48,4 +48,4 @@ spec:
         - name: REPO_ORG
           value: saurav-c
         - name: REPO_BRANCH
-          value: test
+          value: mem-test
