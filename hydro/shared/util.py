@@ -18,6 +18,7 @@ import sys
 import tarfile
 from tempfile import TemporaryFile
 import yaml
+import time
 
 import kubernetes as k8s
 from kubernetes.stream import stream
@@ -131,33 +132,43 @@ def get_service_address(client, svc_name):
 # from https://github.com/aogier/k8s-client-python/
 # commmit: 12f1443895e80ee24d689c419b5642de96c58cc8/
 # file: examples/exec.py line 101
-def copy_file_to_pod(client, file_path, pod_name, pod_path, container):
-    exec_command = ['tar', 'xmvf', '-', '-C', pod_path]
-    resp = stream(client.connect_get_namespaced_pod_exec, pod_name, NAMESPACE,
-                  command=exec_command,
-                  stderr=True, stdin=True,
-                  stdout=True, tty=False,
-                  _preload_content=False, container=container)
+def copy_file_to_pod(client, file_path, pod_name, pod_path, container, retry=5):
+    try:
+        exec_command = ['tar', 'xmvf', '-', '-C', pod_path]
+        resp = stream(client.connect_get_namespaced_pod_exec, pod_name, NAMESPACE,
+                      command=exec_command,
+                      stderr=True, stdin=True,
+                      stdout=True, tty=False,
+                      _preload_content=False, container=container)
 
-    filename = file_path.split('/')[-1]
-    with TemporaryFile() as tar_buffer:
-        with tarfile.open(fileobj=tar_buffer, mode='w') as tar:
-            tar.add(file_path, arcname=filename)
+        filename = file_path.split('/')[-1]
+        with TemporaryFile() as tar_buffer:
+            with tarfile.open(fileobj=tar_buffer, mode='w') as tar:
+                tar.add(file_path, arcname=filename)
 
-        tar_buffer.seek(0)
-        commands = [str(tar_buffer.read(), 'utf-8')]
+            tar_buffer.seek(0)
+            commands = [str(tar_buffer.read(), 'utf-8')]
 
-        while resp.is_open():
-            resp.update(timeout=1)
-            if resp.peek_stdout():
-                pass
-            if resp.peek_stderr():
-                print("Unexpected error while copying files: %s" %
-                      (resp.read_stderr()))
-                sys.exit(1)
-            if commands:
-                c = commands.pop(0)
-                resp.write_stdin(c)
-            else:
-                break
-        resp.close()
+            while resp.is_open():
+                resp.update(timeout=1)
+                if resp.peek_stdout():
+                    pass
+                if resp.peek_stderr():
+                    print("Unexpected error while copying files: %s" %
+                          (resp.read_stderr()))
+                    sys.exit(1)
+                if commands:
+                    c = commands.pop(0)
+                    resp.write_stdin(c)
+                else:
+                    break
+            resp.close()
+    except Exception as e:
+        print('Caught exception')
+        if retry > 0:
+            retry -= 1
+            sleep_time = (5 - retry) * 10
+            print('Retrying in %d...' % (sleep_time)
+            time.sleep(sleep_time)
+            copy_file_to_pod(client, file_path, pod_name, pod_path, container, retry)
+
