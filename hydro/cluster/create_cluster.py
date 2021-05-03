@@ -209,7 +209,7 @@ if __name__ == '__main__':
                         help='The configuration file to start the cluster with'
                         + ' (optional)', dest='conf',
                         default=os.path.join(os.getenv('HYDRO_HOME', '..'),
-                                             'anna/conf/anna-local.yml'))
+                                             'anna/conf/anna-base.yml'))
     parser.add_argument('--ssh-key', nargs='?', type=str,
                         help='The SSH key used to configure and connect to ' +
                         'each node (optional)', dest='sshkey',

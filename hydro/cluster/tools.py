@@ -6,7 +6,7 @@ import subprocess
 import time
 from hydro.shared import util
 
-BASE_CONFIG_FILE = '../anna/conf/anna-local.yml'
+BASE_CONFIG_FILE = '../anna/conf/anna-base.yml'
 POD_CONFIG_DIR = '/hydro/anna/conf/'
 
 main_client, main_apps_client = util.init_k8s()

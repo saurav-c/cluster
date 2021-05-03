@@ -40,7 +40,7 @@ spec:
         - name: ROUTING_IPS
           value: ROUTING_IPS_DUMMY
         - name: MGMT_IP
-          value: MGMT_IP_DUMMY
+          value: "NULL"
         - name: SEED_IP
           value: SEED_IP_DUMMY
         - name: MON_IPS
