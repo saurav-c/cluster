@@ -100,6 +100,16 @@ def get_pod_ips(client, selector, is_running=False):
 
     return pod_ips
 
+def get_node_ips(client, selector, tp='InternalIP'):
+    nodes = client.list_node(label_selector=selector).items
+    result = []
+    for node in nodes:
+        for address in node.status.addresses:
+            if address.type == tp:
+                result.append(address.address)
+
+    return result
+
 
 def get_previous_count(client, kind):
     selector = 'role=%s' % (kind)

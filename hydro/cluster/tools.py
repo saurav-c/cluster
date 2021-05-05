@@ -27,6 +27,8 @@ def main():
 			restart_all()
 		else:
 			restart(ip)
+	elif cmd == 'clear':
+		clear_anna()
 
 def send_conf_all(client=None):
 	client = client if client is not None else main_client
@@ -81,6 +83,32 @@ def restart(ip, client=None):
 
 	print('Restarted %s' %(ip))
 
+def clear_anna(client=None):
+	client = client if client is not None else main_client
+
+	node_ips = util.get_node_ips(client, 'role=memory', 'ExternalIP')
+
+	import sys
+	sys.path.append('./../anna/client/python')
+
+	from anna.client import AnnaTcpClient
+	from anna.anna_pb2 import GET
+	from anna.zmq_util import send_request
+
+	c = AnnaTcpClient('', None)
+	req, _ = c._prepare_data_request('DELETE')
+	req.type = GET
+
+	for ip in node_ips:
+		for i in range(4):
+			addr = 'tcp://' + ip + ':' + str(6200 + i)
+			send_sock = c.pusher_cache.get(addr)
+
+			send_request(req, send_sock)
+			print('Cleared %s' % (addr))
+		print('Cleared %s' % (ip))
+
+	del c
 
 if __name__ == '__main__':
 	main()
