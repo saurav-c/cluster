@@ -96,7 +96,7 @@ def clear_anna(client=None):
 	from anna.zmq_util import send_request
 
 	c = AnnaTcpClient('', None)
-	req, _ = c._prepare_data_request('DELETE')
+	req, _ = c._prepare_data_request(['DELETE'])
 	req.type = GET
 
 	for ip in node_ips:
