@@ -24,11 +24,11 @@ def main():
 			send_conf(ip)
 	elif cmd == 'restart':
 		ip = args[1]
+		kind = args[2] if len(args) > 2 else 'memory'
 		if ip == 'all':
-			kind = args[2] if len(args) > 2 else 'memory'
-			restart_all()
+			restart_all(kind=kind)
 		else:
-			restart(ip)
+			restart(ip, kind=kind)
 	elif cmd == 'clear':
 		clear_anna()
 
