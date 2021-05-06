@@ -25,7 +25,8 @@ def main():
 	elif cmd == 'restart':
 		ip = args[1]
 		if ip == 'all':
-			restart_all()
+			kind = args[2] if len(args) > 2 else 'memory'
+			restart_all(kind=kind)
 		else:
 			restart(ip)
 	elif cmd == 'clear':
@@ -63,9 +64,9 @@ def send_conf(ip, client=None):
 
 	os.system('rm ./anna-config.yml')
 
-def restart_all(client=None):
+def restart_all(client=None, kind='memory'):
 	client = client if client is not None else main_client
-	pod_ips = util.get_pod_ips(client, selector='role=memory', is_running=True)
+	pod_ips = util.get_pod_ips(client, selector='role='+kind, is_running=True)
 	for pod_ip in pod_ips:
 		restart(pod_ip)
 
