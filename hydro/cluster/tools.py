@@ -68,7 +68,7 @@ def restart_all(client=None, kind='memory'):
 	client = client if client is not None else main_client
 	pod_ips = util.get_pod_ips(client, selector='role='+kind, is_running=True)
 	for pod_ip in pod_ips:
-		restart(pod_ip, kind)
+		restart(pod_ip, kind=kind)
 
 def restart(ip, client=None, kind='memory'):
 	client = client if client is not None else main_client
