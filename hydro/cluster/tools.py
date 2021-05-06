@@ -26,7 +26,7 @@ def main():
 		ip = args[1]
 		if ip == 'all':
 			kind = args[2] if len(args) > 2 else 'memory'
-			restart_all(kind=kind)
+			restart_all()
 		else:
 			restart(ip)
 	elif cmd == 'clear':
@@ -68,9 +68,9 @@ def restart_all(client=None, kind='memory'):
 	client = client if client is not None else main_client
 	pod_ips = util.get_pod_ips(client, selector='role='+kind, is_running=True)
 	for pod_ip in pod_ips:
-		restart(pod_ip)
+		restart(pod_ip, kind)
 
-def restart(ip, client=None):
+def restart(ip, client=None, kind='memory'):
 	client = client if client is not None else main_client
 
 	pod = util.get_pod_from_ip(client, ip)
@@ -78,7 +78,7 @@ def restart(ip, client=None):
 	cname = pod.spec.containers[0].name
 	kill_cmd = 'kubectl exec -it %s -c %s -- /sbin/killall5' % (pname, cname)
 	subprocess.run(kill_cmd, shell=True)
-	pod_ips = util.get_pod_ips(client, selector='role=memory', is_running=True)
+	pod_ips = util.get_pod_ips(client, selector='role='+kind, is_running=True)
 	while ip not in pod_ips:
 		pod_ips = util.get_pod_ips(client, selector='role='+kind, is_running=True)
 	send_conf(ip)
