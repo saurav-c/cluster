@@ -18,7 +18,8 @@ def main():
 	if cmd == 'send-conf':
 		ip = args[1]
 		if ip == 'all':
-			send_conf_all()
+			kind = args[2] if len(args) > 2 else 'memory'
+			send_conf_all(kind=kind)
 		else:
 			send_conf(ip)
 	elif cmd == 'restart':
@@ -30,9 +31,9 @@ def main():
 	elif cmd == 'clear':
 		clear_anna()
 
-def send_conf_all(client=None):
+def send_conf_all(client=None, kind='memory'):
 	client = client if client is not None else main_client
-	pod_ips = util.get_pod_ips(client, selector='role=memory', is_running=True)
+	pod_ips = util.get_pod_ips(client, selector='role='+kind, is_running=True)
 	for pod_ip in pod_ips:
 		send_conf(pod_ip)
 
